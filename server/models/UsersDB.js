@@ -22,6 +22,6 @@ async function getUser() { //Skapar en funktion getUser
     }
 }
 
-module.exports = ( //Funktioner som kan användas i andra filer så länge de är kopplade till den här filen
+module.exports =  {//Funktioner som kan användas i andra filer så länge de är kopplade till den här filen
 getUser
-)
+};
