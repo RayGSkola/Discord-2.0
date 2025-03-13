@@ -1,27 +1,25 @@
-const mysql = require("mysql2/promise") //använda async istället för callback, lättare att koda
+const pool = require('server\config\db.js');
 
-async function getConnection() {  //Kopplar till databasen
-    return mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "",
-    database: "fakediscord",
-})
-}
-
-async function getUser() { //Skapar en funktion getUser 
-    const connection = await getConnection(); //Väntar på att koppla till databsen innan den utför resten av koden
+async function getUsers() {
     try {
-        const [rows] = await connection.execute(`SELECT * FROM users`); //Hämtar allt från tabellen users efter den har en koppling till databasen
-        return rows
+        const [rows] = await pool.execute("SELECT * FROM users");
+        return rows; //Skapar array rows och sparar allt som man får från "SELECT * FROM users" i den
     } catch (error) {
-        console.log("något är fel", error);
-        throw new Error("getUsers är problemet")
-    } finally {
-        (await connection).end()
+        console.error("Error in getUsers:", error)
+        throw new Error("Database query failed");
     }
 }
 
-module.exports =  {//Funktioner som kan användas i andra filer så länge de är kopplade till den här filen
-getUser
-};
+async function getUsersById() {
+    try {
+        const [rows] = await pool.execute("SELECT * FROM users WHERE Id = ?", [userId]);
+        return rows[0]; //Returnerar ett user objekt
+    } catch (error) {
+        console.error("Error in getUsersById:", error)
+        throw new Error("Database query failed");
+    }
+}
+
+module.exports = {
+    getUsers, getUsersById  
+}
