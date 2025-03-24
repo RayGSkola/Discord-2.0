@@ -1,14 +1,19 @@
-module.exports = (io) => {
-    io.on("connection", (socket) => {
+// socket.js
+
+function setupSockets(io) {
+  io.on("connection", (socket) => {
       console.log("A user connected");
-  
-      socket.on("sendMessage", (data) => {
-        io.emit("receiveMessage", data);
+      
+      // Example of socket events
+      socket.on("message", (msg) => {
+          console.log("Message received: " + msg);
+          io.emit("message", msg);
       });
-  
+
       socket.on("disconnect", () => {
-        console.log("User disconnected");
+          console.log("A user disconnected");
       });
-    });
-  };
-  
+  });
+}
+
+module.exports = { setupSockets };  
