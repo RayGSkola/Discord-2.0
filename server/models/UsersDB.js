@@ -21,13 +21,14 @@ async function getUsersById(userId) {
         throw new Error("Database query failed");
     }
 }
-async function getUserByUsername(Username) { //Function som hämtar användare baserat på användarnamn
+async function getUserByUsername(Username) { //Function som hämtar användare och lösenordet baserat på användarnamn
     const pool = await createPool();
     try {
-        const[rows] = await pool.execute("SELECT Username FROM users WHERE Username = ?", [Username]);
-        return rows;
+        const[rows] = await pool.execute("SELECT * FROM users WHERE Username = ?", [Username]);
+        console.log("📜 User from DB:", rows[0])
+        return rows.length > 0 ? rows[0] : null;
     } catch (error) {
-        console.error("Error in getUserByUsername", eroor)
+        console.error("Error in getUserByUsername", error)
         throw new Error("Databse query failed");
     }
 }
@@ -37,10 +38,12 @@ async function addUser (Username, Displayname, Email, Password) {
         Username, Displayname, Email, Password
     })
     const pool = await createPool();
-    const query = "INSERT INTO users (Username, Displayname, Email, Password) VALUES (?,?,?,?)"
-    const values = [Username, Displayname, Email, Password]
-    try {
-        await pool.execute(query,values)
+  try {
+        const [result] = await pool.execute(
+            "INSERT INTO Users (Username, Displayname, Email, Password) VALUES (?, ?, ?, ?)",
+            [Username, Displayname, Email, Password]
+        );
+        return result;
     } catch (error) {
         console.error("Database insertion error:", error);
     throw new Error("Error executing the database query");
