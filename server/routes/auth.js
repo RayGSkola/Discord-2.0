@@ -12,57 +12,48 @@ router.post("/register", async (req, res) => {
         const existingUser = await UsersDB.getUserByUsername(Username);
         if (existingUser) {
             return res.status(400).json({ error: "User already exists" });
-        } 
+        }
 
-        const hashedPassword = await bcrypt.hash(Password, 10); 
-        console.log("🔒 Hashed Password Being Stored:", hashedPassword);
+        const hashedPassword = await bcrypt.hash(Password, 10);
+        await UsersDB.addUser(Username, Displayname || Username, Email, hashedPassword);
 
-        const newUser = await UsersDB.addUser(Username, Displayname || Username, Email, hashedPassword);
+        console.log("✅ User registered successfully:", Username);
+        return res.redirect("/ChatRoom");  
 
-        res.status(201).json({ message: "User registered successfully" });
     } catch (error) {
-        console.log("Oh no, something went wrong", error);
-        throw new Error("Post register");
+        console.log("❌ Registration error:", error);
+        res.status(500).json({ error: "Internal Server Error" });
     }
 });
 
 router.post("/login", async (req, res) => {
     try {
         const { Username, Password } = req.body;
-        
         if (!Username || !Password) {
             return res.status(400).json({ error: "Username and Password are required" });
         }
 
         const user = await UsersDB.getUserByUsername(Username);
-
-        console.log("🔍 User Found:", user); 
-        console.log("🔑 Entered Password:", Password); 
-        console.log("🔒 Stored Hashed Password:", user.Password);
-
-
-        if (!user || !user.Password) { 
+        if (!user || !user.Password) {
             return res.status(400).json({ error: "Invalid username or password" });
         }
 
         const isMatch = await bcrypt.compare(Password, user.Password);
-        console.log("✅ Password Match:", isMatch);
-
         if (!isMatch) {
             return res.status(400).json({ error: "Invalid username or password" });
         }
 
-        const token = jwt.sign({ id: user.Id, username: user.Username }, SECRET_KEY, { expiresIn: "1h" });
+        const token = jwt.sign({ userId: user.id, username: user.Username }, SECRET_KEY, { expiresIn: "24h" });
 
-        res.status(200).json({
-            message: "Login successful",
-            token: token
-        });
+        res.cookie("authToken", token, { httpOnly: true, secure: true, sameSite: "Strict", maxAge: 24 * 60 * 60 * 1000 });
+
+        console.log("✅ Login successful:", Username);
+        return res.redirect("/ChatRoom") 
 
     } catch (error) {
-        console.error("❌ Error in /login:", error);
+        console.error("❌ Login error:", error);
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
 
-module.exports = router; 
+module.exports = router;

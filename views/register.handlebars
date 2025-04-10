@@ -1,17 +1,19 @@
+<div class="auth-container">
+    <form action="/auth/register" method="post" class="auth-form">
+        <h2>Register</h2>
 
-<form action="/auth/register" method="post">
+        <label for="Username">Username</label>
+        <input type="text" name="Username" required />
 
-    <label for="Username">Username</label>
-    <input type="text" name="Username" required/>
+        <label for="Displayname">Displayname</label>
+        <input type="text" name="Displayname" />
 
-    <label for="Displayname">Displayname</label>
-    <input type="text" name="Displayname">
+        <label for="Email">Email</label>
+        <input type="email" name="Email" required />
 
-    <label for="Email">Email</label>
-    <input type="email" name="Email" required>
+        <label for="Password">Password</label>
+        <input type="password" name="Password" required />
 
-    <label for="Password">Password</label>
-    <input type="text" name="Password" required>
-
-    <button type="submit">submit</button>
-</form>
+        <button type="submit">Submit</button>
+    </form>
+</div>

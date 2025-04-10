@@ -1,19 +1,16 @@
-// socket.js
+const MessageDB = require("../models/MessageDB");
 
-function setupSockets(io) {
-  io.on("connection", (socket) => {
-      console.log("A user connected");
-      
-      // Example of socket events
-      socket.on("message", (msg) => {
-          console.log("Message received: " + msg);
-          io.emit("message", msg);
-      });
+module.exports = (io) => {
+    io.on("connection", (socket) => {
+        console.log("🟢 User connected:", socket.id);
 
-      socket.on("disconnect", () => {
-          console.log("A user disconnected");
-      });
-  });
-}
+        socket.on("sendMessage", async ({ senderId, receiverId, message }) => {
+            const savedMessage = await MessageDB.addMessage(senderId, receiverId, message);
+            io.to(receiverId).emit("receiveMessage", savedMessage);
+        });
 
-module.exports = { setupSockets };  
+        socket.on("disconnect", () => {
+            console.log("🔴 User disconnected:", socket.id);
+        });
+    });
+};

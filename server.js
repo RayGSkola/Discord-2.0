@@ -8,7 +8,7 @@ const dotenv = require("dotenv");
 const db = require("./server/config/db"); 
 const authRoutes = require("./server/routes/auth"); 
 const chatRoutes = require("./server/routes/chat"); 
-const { setupSockets } = require("./server/sockets/socket"); 
+const setupSockets  = require("./server/sockets/socket"); 
 
 
 dotenv.config();
@@ -47,6 +47,10 @@ app.get("/register", (req, res) => {
 
 app.get("/login", (req, res) => {
     res.render("login"); 
+});
+
+app.get("/ChatRoom", (req, res) => {
+    res.render("Chat")
 });
 
 // Startar servern
