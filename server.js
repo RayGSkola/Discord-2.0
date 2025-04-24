@@ -9,7 +9,10 @@ const db = require("./server/config/db");
 const authRoutes = require("./server/routes/auth"); 
 const chatRoutes = require("./server/routes/chat"); 
 const setupSockets  = require("./server/sockets/socket"); 
-
+const docsRoute = require("./server/routes/docs");
+const userRoute = require("./server/routes/users");
+const authenticateToken = require("./server/middleware/authMiddleware"); 
+const cookieParser = require("cookie-parser");
 
 dotenv.config();
 
@@ -27,11 +30,13 @@ app.set("views", path.join(__dirname, "views"));
 app.use(express.urlencoded({ extended: true })); //Läser "User submitted" data
 app.use(express.json()); // Läser JSON requests
 app.use(express.static(path.join(__dirname, "Public"))); // Hanterar static files
+app.use(cookieParser()) //Läser cookies från inkommande HTTP-request
 
 // Routing till olika funktioner
 app.use("/auth", authRoutes); // Hanterar login & register
 app.use("/chat", chatRoutes); // Chat relaterade routing
-
+app.use("/docs", docsRoute); //Docs route
+app.use("/users", userRoute); //Users relaterade routing
 
 // Startar websocket events
 setupSockets(io);
@@ -49,12 +54,12 @@ app.get("/login", (req, res) => {
     res.render("login"); 
 });
 
-app.get("/ChatRoom", (req, res) => {
+app.get("/ChatRoom", authenticateToken, (req, res) => {
     res.render("Chat")
 });
 
 // Startar servern
 const PORT = process.env.PORT || 8000;
 server.listen(PORT, () => {
-    console.log(`🚀 Server is running on port ${PORT}`);
+    console.log(`Server is running on port ${PORT}`);
 });

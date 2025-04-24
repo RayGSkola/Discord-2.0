@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 const UsersDB = require("../models/UsersDB.js");
 
 const router = express.Router();
-const SECRET_KEY = "Hemlig_Nyckel";
+const SECRET_KEY = "!wolley dna kcalb ,hoO kcalb ,wolleY .kcalb ,wolleY .kcalb ,wolleY .kcalb ,wolleY elbissopmi si kniht snamuh tahw erac tnod seeb esuaceb yawyna seilf ,esruoc fo ,eeb ehT dnuorg eht ffo ydob elttil taf sti teg ot llams oot era sgniw stI ylf ot elba eb dluohs eeb a yaw on si ereht ,noitaiva fo swal nwonk lla ot gnidroccA";
 
 router.post("/register", async (req, res) => {
     try {
@@ -17,11 +17,11 @@ router.post("/register", async (req, res) => {
         const hashedPassword = await bcrypt.hash(Password, 10);
         await UsersDB.addUser(Username, Displayname || Username, Email, hashedPassword);
 
-        console.log("✅ User registered successfully:", Username);
+        console.log("User registered successfully:", Username);
         return res.redirect("/ChatRoom");  
 
     } catch (error) {
-        console.log("❌ Registration error:", error);
+        console.log("Registration error:", error);
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
@@ -47,11 +47,11 @@ router.post("/login", async (req, res) => {
 
         res.cookie("authToken", token, { httpOnly: true, secure: true, sameSite: "Strict", maxAge: 24 * 60 * 60 * 1000 });
 
-        console.log("✅ Login successful:", Username);
+        console.log("Login successful:", Username);
         return res.redirect("/ChatRoom") 
 
     } catch (error) {
-        console.error("❌ Login error:", error);
+        console.error("Login error:", error);
         res.status(500).json({ error: "Internal Server Error" });
     }
 });

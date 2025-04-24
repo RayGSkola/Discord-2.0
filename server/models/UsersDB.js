@@ -50,6 +50,18 @@ async function addUser (Username, Displayname, Email, Password) {
     }
 }
 
+async function updateUser(id, displayname, email) {
+    const [result] = await db.query(
+        "UPDATE users SET Displayname = ?, Email = ? WHERE id = ?",
+        [displayname, email, id]
+    );
+    if (result.affectedRows === 0) return null;
+
+    return { id, displayname, email };
+}
+
+
+
 module.exports = {
     getUsers, getUsersById, getUserByUsername , addUser
 }

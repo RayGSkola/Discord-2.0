@@ -202,6 +202,32 @@ html, body {
     color: #4752c4;
 }
 
+.notification {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background-color: #5865F2;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    z-index: 1000;
+    font-family: 'Inter', sans-serif;
+}
+
+.notification.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.notification.hidden {
+    pointer-events: none;
+}
+
+
 /* Responsive Adjustments */
 @media (max-width: 500px) {
     .auth-form {

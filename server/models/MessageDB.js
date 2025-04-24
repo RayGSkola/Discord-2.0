@@ -14,4 +14,8 @@ const MessageDB = {
     }
 };
 
+async function DisplayMessage() {
+    
+}
+
 module.exports = MessageDB;
