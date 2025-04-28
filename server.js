@@ -54,7 +54,7 @@ app.get("/login", (req, res) => {
     res.render("login"); 
 });
 
-app.get("/ChatRoom", authenticateToken, (req, res) => {
+app.get("/ChatRoom", authenticateToken, (req, res) => { //Skickar användare till ChatRoom om de är inloggade
     res.render("Chat")
 });
 
