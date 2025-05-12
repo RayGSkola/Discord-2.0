@@ -13,13 +13,28 @@
             <h2>Chat with <span id="current-chat">User 1</span></h2>
         </header>
 
-        <div class="messages" id="messages">
-            
+        <div id="chat-container">
+            <div id="chat-box" style="height: 400px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px;">
+                <!-- Messages appear here -->
+            </div>
+            <input type="text" id="chatMessage" placeholder="Type a message..." style="width: 70%;">
+            <button id="sendButton">Send</button>
         </div>
-
-        <footer class="chat-input">
-            <input type="text" id="messageInput" placeholder="Type a message..." />
-            <button id="sendMessage">Send</button>
-        </footer>
     </main>
 </div>
+
+<!-- ✅ Correct client-side script includes -->
+<script src="/socket.io/socket.io.js"></script>
+<script src="/chat.js"></script>
+
+<!-- ✅ Script to wire up the send button -->
+<script>
+    document.getElementById("sendButton").addEventListener("click", () => {
+        const input = document.getElementById("chatMessage");
+        const message = input.value.trim();
+        if (message !== "") {
+            sendMessage(message); // This must be defined in chat.js
+            input.value = "";
+        }
+    });
+</script>

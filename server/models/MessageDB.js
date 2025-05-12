@@ -1,5 +1,6 @@
 const db = require("../config/db");
 
+
 const MessageDB = {
     addMessage: async (senderId, receiverId, message) => {
         const query = "INSERT INTO messages (sender_id, receiver_id, message, timestamp) VALUES (?, ?, ?, NOW())";
@@ -14,8 +15,5 @@ const MessageDB = {
     }
 };
 
-async function DisplayMessage() {
-    
-}
 
 module.exports = MessageDB;

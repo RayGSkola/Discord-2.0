@@ -1,16 +1,22 @@
-const MessageDB = require("../models/MessageDB");
 
-module.exports = (io) => {
+// server/sockets/socket.js
+function setupSockets(io) {
     io.on("connection", (socket) => {
-        console.log("🟢 User connected:", socket.id);
+        console.log("🟢 New user connected:", socket.id);
 
-        socket.on("sendMessage", async ({ senderId, receiverId, message }) => {
-            const savedMessage = await MessageDB.addMessage(senderId, receiverId, message);
-            io.to(receiverId).emit("receiveMessage", savedMessage);
+        // Handle receiving a message from a client
+        socket.on("chatMessage", (data) => {
+            console.log("📩 Message received:", data);
+
+            // Send the message to everyone (including sender)
+            io.emit("chatMessage", data);
         });
 
         socket.on("disconnect", () => {
             console.log("🔴 User disconnected:", socket.id);
         });
     });
-};
+}
+
+
+module.exports = setupSockets
