@@ -1,36 +1,51 @@
-
-const {addMessage}= require("../models/MessageDB");
+const jwt = require("jsonwebtoken");
+const { addMessage } = require("../models/MessageDB");
+const cookie = require("cookie");
+const SECRET_KEY = "!wolley dna kcalb ,hoO kcalb ,wolleY .kcalb ,wolleY .kcalb ,wolleY .kcalb ,wolleY elbissopmi si kniht snamuh tahw erac tnod seeb esuaceb yawyna seilf ,esruoc fo ,eeb ehT dnuorg eht ffo ydob elttil taf sti teg ot llams oot era sgniw stI ylf ot elba eb dluohs eeb a yaw on si ereht ,noitaiva fo swal nwonk lla ot gnidroccA";
 
 function setupSockets(io) {
     io.on("connection", (socket) => {
         console.log("🟢 New user connected:", socket.id);
+        const cookies = cookie.parse(socket.handshake.headers.cookie || "");
+        const token = cookies.authToken;
 
-        // Handle receiving a message from a client
-    socket.on("chatMessage", async (data) => {
-        console.log("Received data:", data); // Logga vad som tas emot
+        jwt.verify(token, SECRET_KEY, (err, user) => {
+            if (err) {
+                console.log("❌ Ogiltig token.");
+                socket.disconnect();
+                return;
+            }
+            socket.user = user;
+            console.log("🟢 Användare ansluten:", user.username);
 
-        const {Sender_Id, Receiver_Id, Message} = data;
+            // Skicka senderId till frontend när användaren ansluter
+            socket.emit("userConnected", { senderId: user.username });
 
-        if (Sender_Id === undefined || Receiver_Id === undefined || Message === undefined) {
-            console.error("Missing parameters:", data);
-            return; // Returnera om något saknas
-        }
+            socket.on("chatMessage", async (data) => {
+                console.log("Received data:", data); // Logga vad som tas emot
 
-        try {
-            console.log(data);
-            await addMessage(Sender_Id, Receiver_Id, Message);
-            io.emit("chatMessage", data);
-        } catch (error) {
-            console.error("Fel vid sparning:", error);
-        }
+                const { Receiver_Id, Message } = data;
+
+                if (Receiver_Id === undefined || Message === undefined) {
+                    console.error("Missing parameters:", data);
+                    return; // Returnera om något saknas
+                }
+
+                try {
+                    const senderId = user.username;  // Använd user.username här
+                    console.log(data);
+                    await addMessage(senderId, Receiver_Id, Message);
+                    io.emit("chatMessage", data);  // Skicka meddelandet till alla anslutna användare
+                } catch (error) {
+                    console.error("Fel vid sparning:", error);
+                }
+            });
+        });
+
+        socket.on("disconnect", () => {
+            console.log("🔴 User disconnected:", socket.id);
+        });
     });
-
-
-    socket.on("disconnect", () => {
-        console.log("🔴 User disconnected:", socket.id);
-    });
-});
 }
 
-
-module.exports = setupSockets
+module.exports = setupSockets;
