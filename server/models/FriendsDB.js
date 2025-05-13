@@ -1,5 +1,7 @@
 const createPool = require("../config/db");
 
+
+
 async function DisplayFriends() {
     const pool = await createPool();
     try {
@@ -12,5 +14,8 @@ async function DisplayFriends() {
 }
 
 async function AddFriends() {
-    
+    const searchInput = document.getElementById("friendSearch");
+    const friendListItems = document.querySelectorAll('#friendList li');
 }
+
+module.exports = {DisplayFriends, AddFriends}

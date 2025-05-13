@@ -2,11 +2,15 @@
     <aside class="sidebar">
         <h2>Friends</h2>
 
-        <ul class="friend-list">
-            <li class="friend">User 1</li>
-            <li class="friend">User 2</li>
-            <li class="friend">User 3</li>
-        </ul>
+        <!-- Search bar -->
+        <input type="text" id="friendSearch" placeholder="Search friends..." style="width: 100%; padding: 8px; margin-bottom: 10px;">
+
+       <ul class="friend-list" id="friendList">
+         {{#each friends}}
+        <li>{{this.username}}</li>
+    {{/each}}
+</ul>
+
     </aside>
 
     <main class="chat-window">
@@ -24,18 +28,7 @@
     </main>
 </div>
 
-
 <script src="/socket.io/socket.io.js"></script>
 <script src="/chat.js"></script>
-
-<script>    
-    document.getElementById("sendButton").addEventListener("click", () => {
-        const input = document.getElementById("chatMessage");
-        const message = input.value.trim();
-        if (message !== "") {
-            sendMessage(message); // This must be defined in chat.js
-            input.value = "";
-    
-        }
-    });
-</script>
+<script src="server/models/FriendsDB.js"></script>
+<script>
