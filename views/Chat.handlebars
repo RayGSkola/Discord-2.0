@@ -1,6 +1,7 @@
 <div class="chat-container">
     <aside class="sidebar">
         <h2>Friends</h2>
+
         <ul class="friend-list">
             <li class="friend">User 1</li>
             <li class="friend">User 2</li>
@@ -23,18 +24,18 @@
     </main>
 </div>
 
-<!-- ✅ Correct client-side script includes -->
+
 <script src="/socket.io/socket.io.js"></script>
 <script src="/chat.js"></script>
 
-<!-- ✅ Script to wire up the send button -->
-<script>
+<script>    
     document.getElementById("sendButton").addEventListener("click", () => {
         const input = document.getElementById("chatMessage");
         const message = input.value.trim();
         if (message !== "") {
             sendMessage(message); // This must be defined in chat.js
             input.value = "";
+    
         }
     });
 </script>

@@ -19,7 +19,7 @@ document.getElementById("sendButton").addEventListener("click", () => {
 });
 
 // Receive message
-socket.on("chatMessage", (data) => {
+socket.on("chatMessage", async (data) => {
     const chatBox = document.getElementById("chat-box");
     const msgDiv = document.createElement("div");
     msgDiv.textContent = data;
