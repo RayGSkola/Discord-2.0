@@ -1,47 +1,86 @@
 const express = require("express");
 const router = express.Router();
-const verifyToken = require("../middleware/authMiddleware");  // Importera middleware
-const { createPool } = require("../config/db");
+const authenticateToken = require("../middleware/authMiddleware");
+const FriendsDB = require("../models/FriendsDB");
 
-router.post("/add", verifyToken, async (req, res) => {  // Använd middleware för att säkerställa att användaren är autentiserad
-    const { username } = req.body;  // Användarnamnet från body
-    const userId = req.user.id;  // Hämta användarens id från den dekodade token
+// Skicka vänförfrågan - SKA använda authenticateToken för att hämta sender_Username från token, ej klienten!
+router.post('/request', authenticateToken, async (req, res) => {
+  console.log("authenticateToken kördes, req.user:", req.user);
+  const sender_Username = req.user.username;
+  const { receiver_username } = req.body;
 
-    if (!username) {
-        return res.status(400).json({ error: "Username is required" });  // Om inget användarnamn ges, returnera 400
+  console.log("Skickar vänförfrågan:", { sender_Username, receiver_username });
+
+  if (!receiver_username) {
+    return res.status(400).json({ message: 'Saknar mottagare' });
+  }
+
+  if (!sender_Username) {
+    return res.status(401).json({ message: 'Saknar giltig användare (token saknas eller är ogiltig)' });
+  }
+
+  try {
+    // Kontrollera om de redan är vänner
+    const existingFriends = await FriendsDB.getFriendsForUser(sender_Username);
+    if (existingFriends.includes(receiver_username)) {
+      return res.status(400).json({ message: 'Ni är redan vänner' });
     }
 
-    console.log(`User ${userId} trying to add friend: ${username}`);
-
-    try {
-        const pool = await createPool();
-        const [users] = await pool.execute("SELECT Id FROM users WHERE username = ?", [username]);
-
-        if (users.length === 0) {
-            console.error(`User not found: ${username}`);
-            return res.status(404).json({ error: "User not found" });  // Om användaren inte finns
-        }
-
-        const friendId = users[0].Id;
-        if (friendId === userId) {
-            console.error("User tried to add themselves");
-            return res.status(400).json({ error: "You can't add yourself" });  // Om användaren försöker lägga till sig själv
-        }
-
-        const [existing] = await pool.execute("SELECT * FROM friends WHERE user_id = ? AND friend_id = ?", [userId, friendId]);
-        if (existing.length > 0) {
-            console.error("Already friends with this user");
-            return res.status(400).json({ error: "Already friends" });  // Om de redan är vänner
-        }
-
-        await pool.execute("INSERT INTO friends (user_id, friend_id) VALUES (?, ?)", [userId, friendId]);
-        console.log("Friend added successfully");
-        res.json({ message: "Friend added successfully" });  // Skicka ett meddelande om att vännen lagts till
-
-    } catch (err) {
-        console.error("Error adding friend:", err);
-        res.status(500).json({ error: "Internal server error" });  // Serverfel
+    // Kontrollera om det redan finns en pending förfrågan
+    const pendingRequests = await FriendsDB.getPendingRequests(receiver_username);
+    const alreadyPending = pendingRequests.some(r => r.sender_Username === sender_Username);
+    if (alreadyPending) {
+      return res.status(400).json({ message: 'Förfrågan redan skickad' });
     }
+
+    await FriendsDB.sendFriendRequest(sender_Username, receiver_username);
+    return res.status(200).json({ message: 'Vänförfrågan skickad!' });
+
+  } catch (error) {
+    console.error('DB error:', error);
+    return res.status(500).json({ message: 'Fel vid hantering av vänförfrågan.' });
+  }
 });
+ 
+router.get('/list/:username', async (req, res) => {
+  try {
+    const friends = await FriendsDB.getFriendsForUser(req.params.username);
+    res.json(friends);
+  } catch (err) {
+    console.error("Fel vid hämtning av vänner:", err);
+    res.status(500).json({ message: "Kunde inte hämta vänner" });
+  }
+});
+
+// Hämta pending requests för användare
+router.get("/pending/:username", async (req, res) => {
+  try {
+    const requests = await FriendsDB.getPendingRequests(req.params.username);
+    res.json(requests);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+// Acceptera vänförfrågan
+router.post("/accept", async (req, res) => {
+  const { sender_Username, receiver_username } = req.body;
+  console.log("Mottagen acceptansförfrågan:", { sender_Username, receiver_username });
+
+  if (!sender_Username || !receiver_username) {
+    console.log("Saknar sender eller receiver");
+    return res.status(400).json({ error: "Saknar sender eller receiver" });
+  }
+
+  try {
+    await FriendsDB.acceptFriendRequest(sender_Username, receiver_username);
+    console.log("Vänförfrågan accepterad i DB");
+    res.json({ message: "Vänförfrågan accepterad" });
+  } catch (err) {
+    console.error("Fel vid acceptans:", err);
+    res.status(500).json({ error: err.message || "Fel vid acceptans" });
+  }
+});
+
+
 
 module.exports = router;

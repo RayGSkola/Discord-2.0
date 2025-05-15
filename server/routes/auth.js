@@ -6,25 +6,53 @@ const UsersDB = require("../models/UsersDB.js");
 const router = express.Router();
 const SECRET_KEY = "!wolley dna kcalb ,hoO kcalb ,wolleY .kcalb ,wolleY .kcalb ,wolleY .kcalb ,wolleY elbissopmi si kniht snamuh tahw erac tnod seeb esuaceb yawyna seilf ,esruoc fo ,eeb ehT dnuorg eht ffo ydob elttil taf sti teg ot llams oot era sgniw stI ylf ot elba eb dluohs eeb a yaw on si ereht ,noitaiva fo swal nwonk lla ot gnidroccA";
 
+
 router.post("/register", async (req, res) => {
-    try {
-        const { Username, Password, Email, Displayname } = req.body;
-        const existingUser = await UsersDB.getUserByUsername(Username);
-        if (existingUser) {
-            return res.status(400).json({ error: "User already exists" });
-        }
+  const { Username, Displayname, Email, Password } = req.body;
 
-        const hashedPassword = await bcrypt.hash(Password, 10);
-        await UsersDB.addUser(Username, Displayname || Username, Email, hashedPassword);
-
-        console.log("User registered successfully:", Username);
-        return res.redirect("/ChatRoom");  
-
-    } catch (error) {
-        console.log("Registration error:", error);
-        res.status(500).json({ error: "Internal Server Error" });
+  try {
+    const existingUser = await UsersDB.getUserByUsername(Username);
+    if (existingUser) {
+      return res.status(400).json({ error: "Användarnamnet är redan taget." });
     }
+
+    const hashedPassword = await bcrypt.hash(Password, 10);
+
+    // Lägg till användaren i databasen
+    await UsersDB.addUser(Username, Displayname, Email, hashedPassword);
+
+    // Hämta det faktiska användarobjektet efter insert
+    const user = await UsersDB.getUserByUsername(Username);
+
+    const token = jwt.sign(
+      {
+        userId: user.Id,
+        username: user.Username,
+        email: user.Email,
+        isAdmin: user.isAdmin,
+      },
+      SECRET_KEY,
+      { expiresIn: "1h" }
+    );
+
+    res.cookie("authToken", token, {
+      httpOnly: true,
+      secure: false, // false för lokal utveckling utan HTTPS
+      sameSite: "Lax",
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+
+    res.status(201).json({
+      message: "Användare registrerad!",
+      accessToken: token,
+      user: { username: user.Username, displayname: user.Displayname }
+    });
+  } catch (error) {
+    console.error("Fel vid registrering:", error);
+    res.status(500).json({ error: "Registrering misslyckades." });
+  }
 });
+
 
 router.post("/login", async (req, res) => {
     try {
@@ -43,12 +71,26 @@ router.post("/login", async (req, res) => {
             return res.status(400).json({ error: "Invalid username or password" });
         }
 
-        const token = jwt.sign({ userId: user.id, username: user.Username }, SECRET_KEY, { expiresIn: "24h" });
+        const token = jwt.sign(
+            {
+                userId: user.Id,          // Kolla exakt fältnamn i din DB-tabell
+                username: user.Username,  // Viktigt att det stämmer exakt med DB
+                isAdmin: user.isAdmin,
+                isBanned: user.isBanned
+            },
+            SECRET_KEY,
+            { expiresIn: "24h" }
+        );
 
-        res.cookie("authToken", token, { httpOnly: true, secure: true, sameSite: "Strict", maxAge: 24 * 60 * 60 * 1000 });
+        res.cookie("authToken", token, {
+            httpOnly: true,
+            secure: true,      // true om HTTPS körs
+            sameSite: "Strict",
+            maxAge: 24 * 60 * 60 * 1000
+        });
 
         console.log("Login successful:", Username);
-        return res.redirect("/ChatRoom") 
+        return res.redirect("/ChatRoom");
 
     } catch (error) {
         console.error("Login error:", error);

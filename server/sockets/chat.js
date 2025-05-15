@@ -19,13 +19,17 @@ document.getElementById("sendButton").addEventListener("click", () => {
 });
 
 // Receive message
-socket.on("chatMessage", async (data) => {
+socket.on("chatMessage", (data) => {
     const chatBox = document.getElementById("chat-box");
     const msgDiv = document.createElement("div");
-    msgDiv.textContent = data;
+
+    // Skapa en sträng som visas i chatten
+    msgDiv.textContent = `${data.Sender_Username}: ${data.Message}`;
+
     chatBox.appendChild(msgDiv);
     chatBox.scrollTop = chatBox.scrollHeight;
 });
+
 
 
 module.exports = router;

@@ -21,47 +21,41 @@ async function getUsersById(userId) {
         throw new Error("Database query failed");
     }
 }
-async function getUserByUsername(Username) { //Function som hämtar användare och lösenordet baserat på användarnamn
+async function getUserByUsername(username) {
     const pool = await createPool();
-    try {
-        const[rows] = await pool.execute("SELECT * FROM users WHERE Username = ?", [Username]);
-        console.log("📜 User from DB:", rows[0])
-        return rows.length > 0 ? rows[0] : null;
-    } catch (error) {
-        console.error("Error in getUserByUsername", error)
-        throw new Error("Databse query failed");
-    }
+    const [rows] = await pool.query("SELECT * FROM Users WHERE Username = ?", [username]);
+    return rows[0];
 }
 
 async function addUser (Username, Displayname, Email, Password) {
     console.log("Inserting into Database", {
         Username, Displayname, Email, Password
     })
-    const pool = await createPool();
-  try {
+     const pool = await createPool();
+
+    try {
         const [result] = await pool.execute(
             "INSERT INTO Users (Username, Displayname, Email, Password) VALUES (?, ?, ?, ?)",
             [Username, Displayname, Email, Password]
         );
+
+        // Returnera resultatet, t.ex. insertId
         return result;
     } catch (error) {
         console.error("Database insertion error:", error);
-    throw new Error("Error executing the database query");
+        throw new Error("Error executing the database query");
     }
 }
 
-async function updateUser(id, displayname, email) {
-    const [result] = await db.query(
-        "UPDATE users SET Displayname = ?, Email = ? WHERE id = ?",
-        [displayname, email, id]
-    );
-    if (result.affectedRows === 0) return null;
-
-    return { id, displayname, email };
+async function banUser(username) {
+    const pool = await createPool();
+    const sql = "UPDATE users SET isBanned = 1 WHERE Username = ?";
+    const [result] = await pool.execute(sql, [username]);
+    return result.affectedRows > 0; // true om en rad påverkades (användaren fanns)
 }
 
 
 
 module.exports = {
-    getUsers, getUsersById, getUserByUsername , addUser
+    getUsers, getUsersById, getUserByUsername , addUser, banUser
 }

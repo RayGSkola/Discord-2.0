@@ -1,39 +1,191 @@
 <div class="chat-container">
-    <aside class="sidebar">
-        <h2>Friends</h2>
+ <aside class="sidebar">
+  <h2>Friends</h2>
+  <div class="friend-request">
+    <form id="friendRequestForm" action="/api/friends/request" method="POST">
+      <input type="hidden" name="sender_Username" value="{{currentUsername}}" />
+      <input id="friendUsernameInput" type="text" name="receiver_username" placeholder="Ange användarnamn" required />
+      <button type="button" id="sendFriendRequestBtn">Skicka vänförfrågan</button>
+    </form>
+    <div id="friendRequestMessage"></div>
+  </div>
 
-        <!-- Search bar -->
-        <input type="text" id="friendSearch" placeholder="Search friends..." style="width: 100%; padding: 8px; margin-bottom: 10px;">
-         <button class="add-friend-btn">Add</button>
+ <ul id="friendList">
+  <!-- Vänlistan fylls med JavaScript -->
+</ul>
 
-        <!-- Friend List -->
-        <ul class="friend-list" id="friendList">
-            {{#each friends}}
-                <li class="friend-item" data-id="{{this.id}}">
-                    {{this.username}}
-                </li>
-            {{/each}}
-        </ul>
-    </aside>
 
-    <main class="chat-window">
-        <header class="chat-header">
-            <h2>Chat with <span id="current-chat">User 1</span></h2>
-        </header>
+  <!-- Lägg till denna del för väntande vänförfrågningar -->
+  <div class="friend-requests-section" style="margin-top: 20px;">
+    <h3>Väntande vänförfrågningar</h3>
+    <div id="pendingRequestsContainer"></div>
+  </div>
+</aside>
 
-         <div id="chat-container">
-            <div id="chat-box" style="height: 400px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px;">
-                <!-- Messages appear here -->
-            </div>
-            <div class="chat-input">
-                <input type="text" id="chatMessage" placeholder="Type a message..." style="width: 70%; padding: 10px; border-radius: 8px;">
-                <button id="sendButton" onclick="sendMessage()">Send</button>
-            </div>
-        </div>
-    </main>
+  <main class="chat-window">
+    <header class="chat-header">
+      <h2>Chat with <span id="current-chat">User 1</span></h2>
+    </header>
+
+    <div id="chat-container">
+      <div id="chat-box" style="height: 400px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px;">
+        <!-- Messages appear here -->
+      </div>
+      <div class="chat-input">
+        <input type="text" id="chatMessage" placeholder="Type a message..." style="width: 70%; padding: 10px; border-radius: 8px;">
+        <button id="sendButton">Send</button>
+      </div>
+    </div>
+  </main>
 </div>
+
+<script> const currentUsername = "{{currentUsername}}";  // Injectad från servern</script>
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/chat.js"></script>
-<script src="server/models/FriendsDB.js"></script>
+
 <script>
+
+  // ===== Skicka vänförfrågan =====
+  document.getElementById('sendFriendRequestBtn').addEventListener('click', async (e) => {
+    e.preventDefault();
+    const receiverUsername = document.getElementById('friendUsernameInput').value.trim();
+    const messageElem = document.getElementById('friendRequestMessage');
+
+    if (!receiverUsername) {
+      messageElem.textContent = "Ange ett användarnamn!";
+      messageElem.style.color = 'red';
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/friends/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ receiver_username: receiverUsername }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        messageElem.textContent = data.message;
+        messageElem.style.color = 'green';
+        document.getElementById('friendUsernameInput').value = '';
+        await fetchFriendList(); // Uppdatera vänlista direkt
+      } else {
+        messageElem.textContent = data.message || 'Fel vid förfrågan';
+        messageElem.style.color = 'red';
+      }
+    } catch (error) {
+      messageElem.textContent = "Fel vid kommunikation med servern.";
+      messageElem.style.color = 'red';
+      console.error(error);
+    }
+  });
+
+  // ===== Hämta vänförfrågningar (pending) =====
+  async function fetchPendingRequests() {
+    try {
+      const response = await fetch(`/api/friends/pending/${currentUsername}`);
+      if (!response.ok) throw new Error("Misslyckades hämta vänförfrågningar");
+      const pendingRequests = await response.json();
+
+      const container = document.getElementById('pendingRequestsContainer');
+      container.innerHTML = '';
+
+      if (pendingRequests.length === 0) {
+        container.textContent = "Inga väntande vänförfrågningar";
+        return;
+      }
+
+      pendingRequests.forEach(request => {
+        const requestDiv = document.createElement('div');
+        requestDiv.classList.add('friend-request-item');
+        requestDiv.textContent = `Vänförfrågan från ${request.sender_Username}`;
+
+        const acceptBtn = document.createElement('button');
+        acceptBtn.textContent = 'Acceptera';
+        acceptBtn.onclick = async () => {
+          try {
+            const res = await fetch('/api/friends/accept', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                sender_Username: request.sender_Username,
+                receiver_username: currentUsername
+              })
+            });
+
+            if (!res.ok) throw new Error('Kunde inte acceptera vänförfrågan');
+
+            alert('Vänförfrågan accepterad!');
+            await fetchPendingRequests();
+            await fetchFriendList(); // Uppdatera vänlistan också
+          } catch (err) {
+            alert(err.message);
+          }
+        };
+
+        requestDiv.appendChild(acceptBtn);
+        container.appendChild(requestDiv);
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  // ===== Hämta vänlistan =====
+  async function fetchFriendList() {
+    try {
+      const response = await fetch(`/api/friends/list/${currentUsername}`);
+      if (!response.ok) throw new Error("Kunde inte hämta vänlista");
+      const friends = await response.json();
+
+      const list = document.getElementById('friendList');
+      list.innerHTML = '';
+
+      if (friends.length === 0) {
+        list.innerHTML = '<li>Inga vänner ännu</li>';
+        return;
+      }
+
+      friends.forEach(friend => {
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = "#";
+        a.className = "friend-link";
+        a.textContent = friend;
+        li.appendChild(a);
+        list.appendChild(li);
+      });
+
+      addFriendClickListeners();
+    } catch (error) {
+      console.error("Fel vid laddning av vänlista:", error);
+    }
+  }
+
+  // ===== Klicka på vännamn för att byta aktiv chatt =====
+  function addFriendClickListeners() {
+  const friendLinks = document.querySelectorAll(".friend-link");
+  const currentChatElem = document.getElementById("current-chat");
+
+  friendLinks.forEach(link => {
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      const friendName = e.target.textContent;
+      currentChatElem.textContent = friendName;
+      currentReceiver = friendName;
+      console.log("Selected chat with:", currentReceiver);
+      loadChatHistory(friendName);  // 🟢 Laddar historiken!
+    });
+  });
+}
+
+
+  // ===== Initiera när sidan laddats =====
+  document.addEventListener('DOMContentLoaded', () => {
+    fetchPendingRequests();
+    fetchFriendList();
+  });
+</script>

@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const authenticateToken = require("../middleware/authMiddleware");
 const MessageDB = require("../models/MessageDB");
-const { DisplayFriends } = require("../models/FriendsDB"); // Din fil med funktionen
+
 
 router.get("/messages", authenticateToken, async (req, res) => { //Hämtar alla meddelanden från databasen, men bara om anvnändaren är inloggad
     try {
@@ -21,6 +21,11 @@ router.get("/chat", async (req, res) => {
     } catch (error) {
         res.status(500).send("Error loading friends");
     }
+});
+
+router.get('/chat', authenticateToken, (req, res) => {
+  const currentUsername = req.user.Username; 
+  res.render('chat', { currentUsername });
 });
 
 
