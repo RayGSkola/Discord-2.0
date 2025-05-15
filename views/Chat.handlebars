@@ -4,13 +4,16 @@
 
         <!-- Search bar -->
         <input type="text" id="friendSearch" placeholder="Search friends..." style="width: 100%; padding: 8px; margin-bottom: 10px;">
+         <button class="add-friend-btn">Add</button>
 
-       <ul class="friend-list" id="friendList">
-         {{#each friends}}
-        <li>{{this.username}}</li>
-    {{/each}}
-</ul>
-
+        <!-- Friend List -->
+        <ul class="friend-list" id="friendList">
+            {{#each friends}}
+                <li class="friend-item" data-id="{{this.id}}">
+                    {{this.username}}
+                </li>
+            {{/each}}
+        </ul>
     </aside>
 
     <main class="chat-window">
@@ -18,12 +21,14 @@
             <h2>Chat with <span id="current-chat">User 1</span></h2>
         </header>
 
-        <div id="chat-container">
+         <div id="chat-container">
             <div id="chat-box" style="height: 400px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px;">
                 <!-- Messages appear here -->
             </div>
-            <input type="text" id="chatMessage" placeholder="Type a message..." style="width: 70%;">
-            <button id="sendButton">Send</button>
+            <div class="chat-input">
+                <input type="text" id="chatMessage" placeholder="Type a message..." style="width: 70%; padding: 10px; border-radius: 8px;">
+                <button id="sendButton" onclick="sendMessage()">Send</button>
+            </div>
         </div>
     </main>
 </div>

@@ -44,18 +44,39 @@ html, body {
     padding: 0;
 }
 
-.friend {
+.friend-item {
+    display: flex;
+    justify-content: space-between; /* This makes the username and button appear on opposite sides */
+    align-items: center;
     padding: 12px;
     background: #25252b;
     border-radius: 8px;
     cursor: pointer;
-    display: flex;
-    align-items: center;
     transition: 0.3s;
+    margin-bottom: 10px;
 }
 
-.friend:hover {
+.friend-item:hover {
     background: #33333b;
+}
+
+.add-friend-btn {
+    background-color: #5865F2; /* Add a background color */
+    color: white;               /* White text */
+    border: none;               /* Remove border */
+    padding: 8px 16px;          /* Adjust padding for better size */
+    border-radius: 8px;         /* Rounded corners */
+    cursor: pointer;            /* Pointer cursor on hover */
+    transition: background-color 0.3s ease; /* Transition effect for background change */
+}
+
+.add-friend-btn:hover {
+    background-color: #4752c4;  /* Lighter blue when hovered */
+}
+
+.add-friend-btn:disabled {
+    background-color: #777;     /* Dimmed color when button is disabled */
+    cursor: not-allowed;        /* Show "not allowed" cursor */
 }
 
 /* Chat Window */
@@ -226,7 +247,6 @@ html, body {
 .notification.hidden {
     pointer-events: none;
 }
-
 
 /* Responsive Adjustments */
 @media (max-width: 500px) {
