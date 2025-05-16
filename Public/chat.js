@@ -38,6 +38,8 @@ socket.on("chatMessage", (data) => {
     chatBox.appendChild(msgElement);
 });
 
+//Skicka friendrequest
+
 document.getElementById('sendFriendRequestBtn').addEventListener('click', async () => {
     const receiverUsername = document.getElementById('friendUsernameInput').value.trim();
     const messageElem = document.getElementById('friendRequestMessage');

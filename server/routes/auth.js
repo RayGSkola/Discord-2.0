@@ -36,17 +36,14 @@ router.post("/register", async (req, res) => {
     );
 
     res.cookie("authToken", token, {
-      httpOnly: true,
-      secure: false, // false för lokal utveckling utan HTTPS
-      sameSite: "Lax",
-      maxAge: 24 * 60 * 60 * 1000,
-    });
+  httpOnly: true,
+  secure: false,
+  sameSite: "Lax",
+  maxAge: 24 * 60 * 60 * 1000,
+});
 
-    res.status(201).json({
-      message: "Användare registrerad!",
-      accessToken: token,
-      user: { username: user.Username, displayname: user.Displayname }
-    });
+return res.redirect("/login");
+
   } catch (error) {
     console.error("Fel vid registrering:", error);
     res.status(500).json({ error: "Registrering misslyckades." });

@@ -32,13 +32,20 @@ async function sendFriendRequest(sender_Username, receiver_Username) {
     }
 
     // Kontroll: finns redan en väntande förfrågan?
-    const [existingRequest] = await pool.query(`
-      SELECT * FROM friend_requests
-      WHERE 
-        (sender_Username = ? AND receiver_Username = ?)
-        OR (sender_Username = ? AND receiver_Username = ?)`,
-      [sender_Username, receiver_Username, receiver_Username, sender_Username]
-    );
+  // Kontrollera om det finns en väntande eller skickad vänförfrågan, oavsett riktning
+const [existingRequest] = await pool.query(`
+  SELECT * FROM friend_requests
+  WHERE 
+    (sender_Username = ? AND receiver_Username = ? AND status = 'pending')
+    OR
+    (sender_Username = ? AND receiver_Username = ? AND status = 'pending')`,
+  [sender_Username, receiver_Username, receiver_Username, sender_Username]
+);
+
+if (existingRequest.length > 0) {
+  throw new Error("En vänförfrågan är redan skickad mellan er.");
+}
+
 
     if (existingRequest.length > 0) {
       throw new Error("Det finns redan en vänförfrågan mellan er");
